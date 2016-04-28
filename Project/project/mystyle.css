@@ -1,0 +1,7 @@
+div {
+	width: 100%;
+	height: 400px;
+	background-image : url('https://upload.wikimedia.org/wikipedia/commons/6/60/Alumni_Hall_1889_Sun.jpg');
+	background-size:contain;
+}
+

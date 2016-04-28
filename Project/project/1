@@ -1,0 +1,336 @@
+<?php
+session_start();
+include_once('/var/www/html/project/proj-lib.php');
+include_once('header.php');
+
+
+
+connect($db);
+if(!isset($_SESSION['authenticated'])){
+authenticate($db,$postUser,$postPass);
+}
+
+echo "<div style=\"text-align:right;font-size:=20px\"><a href=add.php?s=99> Logout </a></div><br>";
+switch ($s){
+default ;
+	echo "</br>Welcome to University of Colorad Boulder : Connect2College </br>";	
+	echo "<div> <img src=http://bands.colorado.edu/colorguard/logo-colorado-university-boulder.gif style=\"float:center\"/> </div>";	
+	break;
+case 4;
+	admin_check();
+	echo "<form method=post action=add.php>";
+	echo "<table><tr><td colspan=2>Add professors to the database</td></tr>";
+	echo "<tr><td>Professor Name</td><td><input type=\"text\" name=\"profName\"></td></tr>";
+	echo "<tr><td>Department Name</td><td><input type=\"text\" name=\"deptName\"></td></tr>";
+	echo "<tr><td colspan=2><input type=\"hidden\" name=s value=\"5\"><input type=\"submit\" name=\"junk\" value=\"submit\"</td></tr>";
+	echo "</table>";
+	echo "</form>";
+	break;
+case 5;
+	admin_check();
+	$profName=mysqli_real_escape_string($db,$profName);
+	$deptName=mysqli_real_escape_string($db,$deptName);
+	if($stmt=mysqli_prepare($db,"INSERT INTO professors set pid='', pname=?, Department=?"))
+	{
+		mysqli_stmt_bind_param($stmt,"ss",$profName,$deptName);
+		mysqli_stmt_execute($stmt);
+		mysqli_stmt_close($stmt);
+	}
+	echo "<form method=post action=add.php>";
+	echo "<table><tr><td colspan=2>Add picture to Professor $ProfName</td></tr>\n";
+	echo "<tr><td> Professor Picture URL </td><td><input type=\"text\" name=\"pictureURL\"></td></tr>";
+	echo "<tr><td colspan=2><input type=\"hidden\" name=s value=\"6\"><input type=\"submit\" name=\"submit\" value=\"submit\"></td></tr>";
+	echo "<tr><td><input type=\"hidden\" name=profName value=\"$profName\"</td></tr>";
+	if($stmt=mysqli_prepare($db,"select pid from professors where pname=? and Department=? order by pid desc limit 1")){
+		mysqli_stmt_bind_param($stmt,"ss",$profName,$deptName);
+		mysqli_stmt_execute($stmt);
+		mysqli_stmt_bind_result($stmt,$picd);
+		while(mysqli_stmt_Fetch($stmt)){
+			$picd=htmlspecialchars($picd);
+		}
+	mysqli_stmt_close($stmt);
+	}
+	 echo "<tr><td><input type=\"hidden\" name=picd value=\"$picd\"></td></tr>";
+	echo "</table>";
+	echo "</form>";
+	break;
+case 6;
+	admin_check();
+	$pictureURL=mysqli_real_escape_string($db,$pictureURL);
+
+	if($stmt=mysqli_prepare($db,"insert into pictures set pid='', url=?, frpid=$picd")){
+		mysqli_stmt_bind_param($stmt,"s",$pictureURL);
+		mysqli_stmt_execute($stmt);
+		mysqli_stmt_close($stmt);
+	}
+	echo "<form>";
+	echo "<table>";
+	echo "<tr><td><a href=add.php> Done Adding Professors</a></td></tr>\n";
+	echo "</table>";
+	echo "</form>";
+	break;
+case 7;
+	admin_check();
+	if($stmt=mysqli_prepare($db,"select pid,pname from professors")){
+		mysqli_stmt_execute($stmt);
+		mysqli_stmt_bind_result($stmt,$profid,$profname);
+	}
+	echo "<form method=post action=add.php>";
+	echo "<table><tr><td colspan=1> Add Courses </td></tr></br>";
+	echo "<tr><td> Add Course Name</td><td><input type=\"text\" name=corname></td></tr>";
+	echo "<tr><td> Add Course Description</td><td> <input type=\"text\" name=cordesc></td></tr>";
+ 
+	echo "<tr><td>Assign a Professor to the course </tr><td>";
+	echo "<select name=\"select_prof\" id=\"profchar\">";
+	while (mysqli_stmt_fetch($stmt)){
+		$profid=htmlspecialchars($profid);
+		$profname=htmlspecialchars($profname);
+	echo "<option value=\"$profid\"> $profname </option>";
+	}
+	echo "</select>";
+	mysqli_stmt_close($stmt);
+	echo "<tr><td><input type=\"submit\" name=\"ADD\" value=\"Add courses to professors\"></td></tr>";
+	echo "<tr><td><input type=\"hidden\" name=\"s\" value=\"8\"></td></tr>";
+	echo "</table>";
+	echo "</form>";
+	break;
+case 8;
+	admin_check();
+	$corname=mysqli_real_escape_string($db,$corname);
+	$cordesc=mysqli_real_escape_string($db,$cordesc);
+	
+	if($stmt=mysqli_prepare($db,"INSERT INTO courses set cid='', cname=?, Description=?, frcid=?")){
+		mysqli_stmt_bind_param($stmt,"sss",$corname,$cordesc,$select_prof);
+		mysqli_stmt_execute($stmt);
+		mysqli_stmt_close($stmt);
+	}
+	echo "<form>";
+	echo "<table>";
+	echo "<tr><td><a href=add.php> Done Adding Courses</a><td></tr>\n";
+	echo "</table>";
+	echo "</form>";
+	break;
+case 9;
+	admin_check();
+	echo "<form method=post action=add.php>";
+	echo "<table><tr><td colspan=2>Add Students to the Database</td></tr>";
+	echo "<tr><td> Student Name </td><td><input type=\"text\" name=\"stname\"></td></tr>";
+	echo "<tr><td> Identiti Key </td><td><input type=\"text\" name=\"stkey\"></td></tr>";
+	echo "<tr><td colspan=2> <input type=\"submit\" name=submit></td><td><input type=\"hidden\" name=s value=\"10\"></td></tr>";
+	echo "</table>";
+	echo "</form>";
+	break;
+case 10;
+	admin_check();
+	$stname=mysqli_real_escape_string($db,$stname);
+	$stkey=mysqli_real_escape_string($db,$stkey);
+	if($stmt=mysqli_prepare($db,"INSERT INTO student set sid='',sname=?,`Identiti key`=?")){
+		mysqli_stmt_bind_param($stmt,"ss",$stname,$stkey);
+		mysqli_stmt_execute($stmt);
+		mysqli_stmt_close($stmt);
+	}
+	echo "<form>";
+        echo "<table>";
+        echo "<tr><td><a href=add.php> Done Adding Students</a><td></tr>\n";
+        echo "</table>";
+        echo "</form>";
+        break;
+case 11;
+	admin_check();
+	if($stmt=mysqli_prepare($db,"select sid,sname from student")){
+                mysqli_stmt_execute($stmt);
+                mysqli_stmt_bind_result($stmt,$stid,$stname);
+        }
+
+
+	echo "<form method=post action=add.php>";
+	echo "<table><tr><td colspan=2> Course Enrollment for students </td></tr>";
+	echo "<select name=\"select_stud\" id=\"stchar\">";
+	while (mysqli_stmt_fetch($stmt)){
+		$stid=htmlspecialchars($stid);
+		$stname=htmlspecialchars($stname);
+	echo "<option value=\"$stid\"> $stname </option>";
+	}
+	echo "</select>";
+	mysqli_stmt_close($stmt);
+	echo "<tr><td><input type=\"submit\" name=\"select student\" value=\"Add courses to professors\"></td></tr>";
+	echo "<tr><td><input type=\"hidden\" name=\"s\" value=\"12\"></td></tr>";
+	break;
+case 12;
+	admin_check();
+	$select_stud=mysqli_real_escape_string($db,$select_stud);
+	if ($stmt=mysqli_prepare($db,"select sname from student where sid=?")){
+		mysqli_stmt_bind_param($stmt,"s",$select_stud);
+		mysqli_stmt_execute($stmt);
+		mysqli_stmt_bind_result($stmt,$tmp_snam);
+		}
+	while (mysqli_stmt_fetch($stmt)){
+		$tmp_snam=htmlspecialchars($tmp_snam);
+	}
+	 mysqli_stmt_close($stmt);	
+if ($stmt=mysqli_prepare($db,"select distinct(courses.cid),courses.cname from courses,grades where courses.cid NOT IN (select frcid from grades where frsid=?)")){
+	mysqli_stmt_bind_param($stmt,"s",$select_stud);
+	mysqli_stmt_execute($stmt);
+	mysqli_stmt_bind_result($stmt,$cid1,$cname1);
+	}
+	
+	echo "<form method=post action=add.php>";
+	echo "<table><tr><td colspan=2> Assign courses to $tmp_snam</tr></td>";
+	echo "<select name=\"select_stud1\" id=\"stchar\">";
+	while (mysqli_stmt_fetch($stmt)){
+                $cid1=htmlspecialchars($cid1);
+                $cname1=htmlspecialchars($cname1);
+        echo "<option value=\"$cid1\"> $cname1 </option>";
+        }
+        echo "</select>";
+        mysqli_stmt_close($stmt);
+	echo "<tr><td><input type=\"submit\" name=\"select student\" value=\"Enroll\"></td></tr>";
+        echo "<tr><td><input type=\"hidden\" name=\"s\" value=\"13\"></td></tr>";
+	echo "<tr><td><input type=\"hidden\" name=\"select_stud\" value=\"$select_stud\"></td></tr>";
+        echo "<tr><td><input type=\"hidden\" name=\"tmp_snam\" value=\"tmp_snam\"></td></tr>";
+	echo "</table>";
+	echo "</form>";
+	
+        break;
+case 13;
+	admin_check();
+	$select_stud=mysqli_real_escape_string($db,$select_stud);
+	$select_stud1=mysqli_real_escape_string($db,$select_stud1);	
+	if($stmt=mysqli_prepare($db,"INSERT INTO grades set gid='', frsid=?, frcid=?")){
+		mysqli_stmt_bind_param($stmt,"ss",$select_stud,$select_stud1);
+		mysqli_stmt_execute($stmt);
+		mysqli_stmt_bind_result($stmt,$select_stud,$select_stud1);
+		mysqli_stmt_close($stmt);
+	}
+	if ($stmt=mysqli_prepare($db,"select distinct(courses.cid),courses.cname from courses,grades where courses.cid NOT IN (select frcid from grades where frsid=?)")){
+        mysqli_stmt_bind_param($stmt,"s",$select_stud);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_bind_result($stmt,$cid1,$cname1);
+        }
+
+        echo "<form method=post action=add.php>";
+        echo "<table><tr><td colspan=2> Assign courses to $tmp_snam</tr></td>";
+	echo "<select name=\"select_stud1\" id=\"stchar\">";
+        while (mysqli_stmt_fetch($stmt)){
+                $cid1=htmlspecialchars($cid1);
+                $cname1=htmlspecialchars($cname1);
+        echo "<option value=\"$cid1\"> $cname1 </option>";
+        }
+        echo "</select>";
+        mysqli_stmt_close($stmt);
+	 echo "<tr><td><input type=\"submit\" name=\"select student\" value=\"Enroll\"></td></tr>";
+        echo "<tr><td><input type=\"hidden\" name=\"s\" value=\"12\"></td></tr>";
+        echo "<tr><td><input type=\"hidden\" name=\"select_stud\" value=\"$select_stud\"></td></tr>";
+
+        echo "<tr><td><a href=add.php> Done</a><td></tr>\n";
+        echo "</table>";
+        echo "</form>";
+	break;
+case 90;
+	admin_check();
+        echo "<form method=post action=add.php>";
+        echo "<table><tr><td colspan=2> Add users to Connect2College </td></tr>";
+        echo "<tr><td>Identitikey: </td><td><input type=text name=newUser value=\"\"> </td></tr>";
+        echo "<tr><td>Password: </td><td><input type=password name=newPass value=\"\"> </td></tr>";
+        echo "<tr><td>Email : </td><td><input type=text name=newEmail value=\"\"> </td></tr>";
+echo "<tr><td> Type of Person</td><td><input type=\"radio\" name=\"type_person\" value=\"professor\">Professor<input type=\"radio\" name=\"type_person\" value=\"student\">Student </td></tr>";
+        echo "<tr><td colspan=2><input type=hidden name=s value=\"91\"><input type=submit name=submit value=\"submit\"></td></tr>";
+        echo "</table>";
+        echo "</form>";
+        break;
+case 91;
+	admin_check();
+        $salt=hash('sha256',$newUser);
+        $pass_hash=hash('sha256',$newPass.$salt);
+        $newUser=mysqli_real_escape_string($db,$newUser);
+        $newPass=mysqli_real_escape_string($db,$pass_hash);
+        $newEmail=mysqli_real_escape_string($db,$newEmail);
+	$type_person=mysqli_real_escape_string($db,$type_person);
+	echo "the new user is $newUser";
+	echo "the new password is $newPass";
+	echo $newEmail;
+	echo $type_person;
+	echo "the salt is $salt";
+	if($stmt=mysqli_prepare($db,"INSERT into users set userid='', ukey=?, password=?, salt=?, email=?, categ=?")){
+		mysqli_stmt_bind_param($stmt,"sssss",$newUser,$newPass,$salt,$newEmail,$type_person);
+		 mysqli_stmt_execute($stmt);
+		mysqli_stmt_close($stmt);
+	}
+	echo "Added new user with Identiti Key $newUser <br>";
+	break;
+case 92;
+	 admin_check();
+        echo "<table><tr><td> <b><u> Users </b></u></td><td> <b><u> Type of Login </b></u></td></tr>\n";
+        if($stmt=mysqli_prepare($db,"select ukey,categ from users")){
+        //      mysqli_stmt_bind_param($stmt);
+                mysqli_stmt_execute($stmt);
+                mysqli_stmt_bind_result($stmt,$unam,$categ_type);
+                while(mysqli_stmt_fetch($stmt)){
+                        $unam=htmlspecialchars($unam);
+			$categ_type=htmlspecialchars($categ_type);
+                        echo "<tr><td>$unam</td> <td> $categ_type </td> </tr>\n";
+                }
+                 mysqli_stmt_close($stmt);
+        }
+        echo "</table>";
+        break;
+
+case 93;
+	 admin_check();
+        echo "<table><tr><td colspan=2> <b><u> Failed Logs/Logins </b></u><b><u> No.of attempts </b></u></td></tr>\n";
+        if($stmt=mysqli_prepare($db,"select ip,count(ip) from login where action='fail' GROUP BY ip")){
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_bind_result($stmt,$ipa,$cnt_ipa);
+        while(mysqli_stmt_fetch($stmt)){
+                $ipa=htmlspecialchars($ipa);
+                $cnt_ipa=htmlspecialchars($cnt_ipa);
+                echo "<tr><td>$ipa</td><td>$cnt_ipa</td></tr>\n";
+                }
+                mysqli_stmt_close($stmt);
+        }
+        echo "</table>";
+
+	break;
+	
+
+
+case 99;
+	logout();
+	break;
+
+}
+
+if ($_SESSION['userid']==1){
+echo "<div style=\"text-align:left;font-size:40px\"><a href=add.php?s=4> Add New Professors </a></div> <br>";
+}
+if ($_SESSION['userid']==1){
+echo "<a href=add.php?s=7> Add New courses </a> <br>";
+}
+if ($_SESSION['userid']==1){
+echo "<a href=add.php?s=9> Add students </a> <br>";
+}
+if ($_SESSION['userid']==1){
+echo "<a href=add.php?s=11> Course Enrollment for students </a><br>";
+}
+if ($_SESSION['userid']==1){
+echo "<a href=grade.php?s=15> Give Grades </a><br>";
+}
+if ($_SESSION['userid']==1){
+echo "<a href=add.php?s=90> Add New Users </a><br>";
+}
+if ($_SESSION['categ'] == "student"){
+	echo "<a href=view.php?s=100> View Grades </a><br>";
+}
+if ($_SESSION['categ'] == "professor"){
+	echo "<a href=view.php?s=101> View Grades for students </a></br>";
+}
+if ($_SESSION['userid']==1){
+        echo "<a href=add.php?s=93> Failed Logs </a> <br>";
+}
+if ($_SESSION['userid']==1){
+        echo "<a href=add.php?s=92> Display Users </a> <br>";
+}
+
+include_once('footer.php');
+
+?>
